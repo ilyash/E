@@ -26,7 +26,9 @@ Adding new environment
 
 Activating an environment
 -------------------------
-(soon)
+Alternatives
+* `E <env-name>` - activates the given environment
+* `E` - launches `whiptail`-bases menu: 5 most recently used environments at the top `===` separator and then all the environments in alpabetical order.
 
 Screenshots
 -----------
