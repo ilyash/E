@@ -1,0 +1,2 @@
+export CHEF_HOME=$E_HOME/_chef
+export KNIFE_HOME=$E_HOME/_chef

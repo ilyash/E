@@ -1,0 +1,22 @@
+# Expects: $AMAZON_ACCESS_KEY_ID
+# Expects: $AMAZON_SECRET_ACCESS_KEY
+
+export AWS_ACCESS_KEY_ID=$AMAZON_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$AMAZON_SECRET_ACCESS_KEY
+
+export AWS_ACCESS_KEY=$AMAZON_ACCESS_KEY_ID
+export AWS_SECRET_KEY=$AMAZON_SECRET_ACCESS_KEY
+
+cd $E_HOME
+
+if [ -n "$CHEF_HOME" ];then
+  mkdir -p "$CHEF_HOME/.completion_cache"
+fi
+
+if [ -f ilya.vim ];then
+	if wmctrl -l | grep -q 'GVIM[0-9]\?$';then
+		:
+	else
+		gvim +"so ilya.vim"	
+	fi
+fi

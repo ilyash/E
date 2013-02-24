@@ -1,0 +1,172 @@
+#!/bin/bash
+
+# E_CFG_DIR - directory that contains all the configuration, environments lists, etc.
+
+# Not tested and might break on
+# * Spaces in directories names
+# * Several environments with identical directory name (last component)
+
+# Recommendations for .bashrc:
+#   alias cdd='cd $E_HOME'
+#   # Set E_NAME in .env.sh and then:
+#   if [ -n "$E_NAME" ]; then
+#   	export PS1='[\e[35m'"$E_NAME"'\e[m] \e[34m$? \u@\h \t \w\e[m\n\W \! > '
+#   else
+#   	export PS1='\e[34m$? \u@\h \t \w\e[m\n\W \! > '
+#   fi
+
+: ${E_CFG_DIR:=$HOME/.E}
+
+if [ ! -d "$E_CFG_DIR" ];then
+	echo -e "Directory '$E_CFG_DIR' (pointed by \$E_CFG_DIR) does not exist. To fix: \n  * Create '$E_CFG_DIR' or\n  * Set \$E_CFG_DIR to (another) value." >/dev/stderr
+	exit 1
+fi
+
+E_ENVS_ROOT=$HOME
+E_CMD=bash
+E_LRU=5
+
+if [ -f $E_CFG_DIR/rc ];then
+	. $E_CFG_DIR/rc
+fi
+
+cmd="$1"
+
+function assert_list() {
+	if [ ! -f $E_CFG_DIR/list ];then
+		echo "ERROR: Environments list ($E_CFG_DIR/list) does not exist. Please run '$0 update'" >/dev/stderr
+		exit 2
+	fi
+	if [ ! -s $E_CFG_DIR/list ];then
+		echo -e "ERROR: Environments list ($E_CFG_DIR/list) is empty. To fix:\n  * Create some directories with '.env.sh' file\n  * Run '$0 update'" >/dev/stderr
+		exit 3
+	fi
+}
+
+function is_env() {
+	[ -d "$1" -a -e "$1/.env.sh" ]
+	return $?
+}
+
+function lookup_env() {
+	# echo "# lookup_env $1" >/dev/stderr
+	if is_env $1;then
+		echo $1
+		return
+	fi
+
+	while read e;do
+		# echo "# e = $e" >/dev/stderr
+		if [ ! -e $e/.env.sh ];then
+			continue
+		fi
+		case $e in
+			*$1) echo "$e"; return;;
+		esac
+	done < $E_CFG_DIR/list
+
+	echo "ERROR: could not find environment $1" >/dev/stderr
+	exit 5
+}
+
+function update_lru() {
+	# File with the LRU list
+	f=$1
+	# Max number of entries
+	n=$2
+	# Entry to add (or move to top)
+	x=$3
+	if [ ! -e $f ];then
+		echo "$x" > $f
+		return
+	fi
+
+	(echo "$x"; cat $f | grep -v -F "$x") | head -$n > $f.new
+	mv $f{.new,}
+}
+
+function activate_env() {
+	echo "*** Setting up environment '$1' ***"
+	d=$(lookup_env $1)
+	e=$?
+	if [ $e -ne 0 ];then
+		exit $e
+	fi
+	update_lru $E_CFG_DIR/list.lru $E_LRU $d
+	export E_HOME=$d
+	export E_NAME=$(basename $d)
+	if [ -e $E_CFG_DIR/rc.pre ];then
+		. $E_CFG_DIR/rc.pre
+	fi
+	. $d/.env.sh
+	if [ -e $E_CFG_DIR/rc.post ];then
+		. $E_CFG_DIR/rc.post
+	fi
+	if [ -n "$E_CMD" ];then
+		$E_CMD
+		code=$?
+		echo "*** Exited environment '$1' ***"
+		exit $code
+	fi
+}
+
+function list_envs() {
+	f=$1
+	cmd=${2:-sort}
+	fmt=${3:-"%s (in %s)\n"}
+	if [ ! -f "$f" ];then
+		return
+	fi
+	cat $f | while read d;do
+		printf "$fmt" "$(basename $d)" "$d"
+	done | $cmd
+}
+
+case "${cmd:-NONE}" in
+	up|update)
+		echo "Updating environments list ..."
+		find $E_ENVS_ROOT -name .env.sh 2>/dev/null | xargs --no-run-if-empty -n1 dirname >$E_CFG_DIR/list
+		assert_list
+		echo "$(wc -l $E_CFG_DIR/list | awk '{print $1}') environment(s) found."
+		;;
+	add)
+		echo "Adding environment"
+		d=`pwd`
+		d=`realpath "$d"`
+		if is_env "$d";then
+			if grep -q -F "$d" $E_CFG_DIR/list;then
+				echo "ERROR: environment already exists"
+				exit 6
+			else
+				echo "$d" >>$E_CFG_DIR/list
+			fi
+		else
+			echo "ERROR: $d is not an environment (probably missing .env.sh file)"
+			exit 7
+		fi
+		# if [ ! -e 
+		;;
+	ls)
+		assert_list
+		list_envs $E_CFG_DIR/list
+		;;
+	lru)
+		list_envs $E_CFG_DIR/list.lru cat
+		;;
+	NONE)
+		menu_items="$(list_envs $E_CFG_DIR/list.lru cat '%s %s\n')"$'\n=== ===\n'"$(list_envs $E_CFG_DIR/list sort '%s %s\n')"
+		echo "$menu_items" | while read tag item;do
+			echo "$tag"
+			echo "$item"
+		done | xargs whiptail --title "E environments manager" --menu "Select environment" 20 78 10 2>$E_CFG_DIR/whiptail.result
+		if [ $? = 0 ];then
+			activate_env `cat $E_CFG_DIR/whiptail.result`
+		else
+			echo "Environment activation canceled"
+		fi
+		;;
+	*)
+		activate_env $1
+		;;
+esac
+
