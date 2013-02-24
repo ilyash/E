@@ -14,16 +14,24 @@ E provides lightweight framework in bash allowing some order and organization of
 
 Setup
 -----
-(soon)
+* Place the E binary somewhere in the path.
+* Create the ~/.E directory.
 
 Adding new environment
 ----------------------
-(soon)
+* Create a directory, named after the project name.
+* `cd` to that directory
+* Create `.env.sh` file (empty or with bunch of `export X=Y` lines or more advanced stuff)
+* Run `E add`
 
-Activation an environment
+Activating an environment
 -------------------------
 (soon)
 
 Screenshots
 -----------
+(soon)
+
+Advanced configuration
+----------------------
 (soon)
