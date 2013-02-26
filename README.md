@@ -30,6 +30,36 @@ Alternatives
 * `E <env-name>` - activates the given environment
 * `E` - launches `whiptail`-based menu: 5 most recently used environments at the top `===` separator and then all the environments in alpabetical order.
 
+Setup and work toaster
+----------------------
+```
+# E binary setup - start
+cd
+grep -qF ":$HOME/.bin" ~/.bashrc || echo "export PATH=$PATH:$HOME/.bin" >>~/.bashrc
+mkdir .bin
+wget -O .bin/E https://raw.github.com/ilyash/E/master/E
+. ~/.bashrc
+chmod +x .bin/E
+mkdir .E
+# E binary setup - done
+
+# Setting up "my-super-proj" project - start
+mkdir my-super-proj
+cd my-super-proj
+echo "export TEST=1" >.env.sh
+E add
+# ignore the error "grep: ..../.E/list: No such file or directory"
+# Setting up "my-super-proj" project - done
+
+# Work with an environment - start
+E
+# pick the project in the menu
+# output: *** Setting up environment 'my-super-proj' ***
+# when finished: CTRL+D
+# output: *** Exited environment 'my-super-proj' ***
+# Work with an environment - done
+```
+
 Screenshots
 -----------
 (soon)
