@@ -62,7 +62,7 @@ E
 
 Screenshots
 -----------
-(soon)
+![screenshot of "E" running without arguments](img/screenshot-select.png "screenshot of "E" running without arguments")
 
 Advanced configuration
 ----------------------
