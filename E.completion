@@ -1,0 +1,10 @@
+function _E() {
+	# Config dir
+	c=${E_CFG_DIR:-$HOME/.E}
+
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+	COMPREPLY=( $(compgen -W "up add ls lru $(cat $c/list | xargs --no-run-if-empty -n1 basename )" $cur) )
+}
+
+complete -F _E E
