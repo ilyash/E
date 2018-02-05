@@ -72,7 +72,7 @@ alias cdd='cd $E_HOME'
 
 Screenshots
 -----------
-![screenshot of "E" running without arguments](img/screenshot-select.png "screenshot of "E" running without arguments")
+![screenshot of "E" running without arguments](img/screenshot-select.png "screenshot of \"E\" running without arguments")
 
 Advanced configuration
 ----------------------
